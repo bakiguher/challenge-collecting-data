@@ -37,14 +37,8 @@ def scrape_house1(url):
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     h_data = HouseData()
-    h_data.link = url
-
-    _a = url.split('/')
-
-    # type of property
-
-    # FIND THE PRICE
-
+    
+   
     _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
         "script", attrs={"type": "text/javascript"}).text.strip()
 
@@ -53,8 +47,9 @@ def scrape_house1(url):
 
     data = json.loads(e)  # python dictionary
 
-    # price= e[0]['price']['mainValue']
-    print(data["price"]["mainValue"])
+    # TODO read data from data dict and put in in to class
+    
+    h_data.link = url
     h_data.price = data["price"]["mainValue"]
     h_data.adress = data["property"]["location"]["postalCode"] + \
         "/" + data["property"]["location"]["locality"]
@@ -74,18 +69,16 @@ def scrape_house1(url):
     h_data.swimming_pool = data["property"]["hasSwimmingPool"]
     h_data.isnewly_built = data["flags"]["isNewlyBuilt"]
 
-
-
     print(h_data.__dict__)
 
-    # js = json.dumps(data)
+    # js = json.dumps(h_data.__dict__)
 
-    # print(js)
+   
 
-    # TODO read data from data dict and put in in to class
+   
 
-    # with open('json_data.txt', 'w') as outfile:
-    #     json.dump(data, outfile)
+    with open('json_data1.txt', 'w') as outfile:
+         json.dump(data, outfile)
 
     driver.close()
 
