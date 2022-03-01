@@ -8,11 +8,8 @@ from selenium import webdriver
 import csv
 
 
-
 class HouseData:
-    
-        
-    
+
     link: str
     price: str  # float
     adress = str  # post code and municipality
@@ -32,116 +29,128 @@ class HouseData:
     swimming_pool = str
     isnewly_built = str
 
-    
-
-
     def __str__(self):
-        return iter([self.link, self.price, self.adress, self.type_of_property,self.subtype_of_property,self.number_of_rooms,
-                    self.area,self.fully_equipped_kitchen,self.open_fire,self.terrace,self.terrace_area,self.garden,self.garden_area,
-                    self.surface_land,self.surface_plot_land,self.number_of_facades,self.swimming_pool,self.isnewly_built])
+        return iter([self.link, self.price, self.adress, self.type_of_property, self.subtype_of_property, self.number_of_rooms,
+                    self.area, self.fully_equipped_kitchen, self.open_fire, self.terrace, self.terrace_area, self.garden, self.garden_area,
+                    self.surface_land, self.surface_plot_land, self.number_of_facades, self.swimming_pool, self.isnewly_built])
 
 
 ur = 'https://www.immoweb.be/en/classified/house/for-sale/merelbeke/9820/9768055?searchId=621c996e4790f'
 
 
-
-
 class SyncThread(Thread):
-    def __init__(self, k, l,url):
+    def __init__(self, k, l, urls):
         Thread.__init__(self)
         self.k = k
         self.l = l
-        self.url=url
+        self.urls = urls
 
     def run(self):
 
-    
-        options = FirefoxOptions()
-        options.add_argument("--headless")
+        
+        for url in self.urls:
+            options = FirefoxOptions()
+            options.add_argument("--headless")
 
-        driver = webdriver.Firefox(options=options)
-        driver.get(self.url)
+            driver = webdriver.Firefox(options=options)
+        
+            #try:
 
+            driver.get(url)
 
-        soup = BeautifulSoup(driver.page_source, "html.parser")
+            soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        h_data = HouseData()
+            _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
+                "script", attrs={"type": "text/javascript"}).text.strip()
 
-        _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
-            "script", attrs={"type": "text/javascript"}).text.strip()
+            d = _alldata.replace('window.classified =', '')
+            e = d.replace(';', '')
 
-        d = _alldata.replace('window.classified =', '')
-        e = d.replace(';', '')
+            data = json.loads(e)  # python dictionary
 
-        data = json.loads(e)  # python dictionary
+            # TODO read data from data dict and put in in to list
+            _h = []
+            _h.append(url)
+            _h.append(data["id"])
+            _h.append(data["price"]["mainValue"])
+            _h.append(data["property"]["location"]["postalCode"] +
+                        "/" + data["property"]["location"]["locality"])
+            _h.append(data["property"]["type"])
+            _h.append(data["property"]["subtype"])
+            _h.append(data["property"]["bedroomCount"])
+            _h.append(data["property"]["land"]["surface"])
+            _h.append(data["property"]["kitchen"]["type"])
+            _h.append(data["property"]["fireplaceExists"])
+            _h.append(data["property"]["hasTerrace"])
+            _h.append(data["property"]["terraceSurface"])
+            _h.append(data["property"]["hasGarden"])
+            _h.append(data["property"]["gardenSurface"])
+            _h.append(data["property"]["land"]["surface"])
+            _h.append(data["property"]["netHabitableSurface"])
+            _h.append(data["property"]["building"]["facadeCount"])
+            _h.append(data["property"]["hasSwimmingPool"])
+            _h.append(data["flags"]["isNewlyBuilt"])
 
-        # TODO read data from data dict and put in in to list
-        _h=[]
-        _h.append(self.url)
-        _h.append( data["price"]["mainValue"])
-        _h.append( data["property"]["location"]["postalCode"] + "/" + data["property"]["location"]["locality"])
-        _h.append( data["property"]["type"])
-        _h.append( data["property"]["subtype"])
-        _h.append( data["property"]["bedroomCount"])
-        _h.append( data["property"]["land"]["surface"])
-        _h.append( data["property"]["kitchen"]["type"])
-        _h.append( data["property"]["fireplaceExists"])
-        _h.append( data["property"]["hasTerrace"])
-        _h.append( data["property"]["terraceSurface"])
-        _h.append( data["property"]["hasGarden"])
-        _h.append( data["property"]["gardenSurface"])
-        _h.append( data["property"]["land"]["surface"])
-        _h.append( data["property"]["netHabitableSurface"])
-        _h.append( data["property"]["building"]["facadeCount"])
-        _h.append( data["property"]["hasSwimmingPool"])
-        _h.append( data["flags"]["isNewlyBuilt"])
+            # print(_h)
 
-        # print(_h)
+            # append list to csv
+            with open(str(self.k) + "_" + str(self.l) + '_prop.csv', 'a', newline='') as f:
+                write = csv.writer(f)
+                write.writerow(_h)
 
-        #append list to csv
-        with open(str(self.k) + "_" + str(self.l)+ '_prop.csv', 'a',newline='') as f: 
-            write = csv.writer(f) 
-            write.writerow(_h) 
-                    
-
-        driver.close()
-
+            driver.close()
+            
+            # except:
+            #     pass
 
 
 def get_urls():
     lines = []
     with open("unique_urls.txt") as file:
-        for line in file: 
-            line = line.strip() 
-            lines.append(line) 
+        for line in file:
+            line = line.strip()
+            lines.append(line)
     return lines
 
 
-u_urls= get_urls()
+u_urls = get_urls()
 
-print(u_urls[0])
-print(u_urls[1])
-b=12
+# print(u_urls[0])
+# print(u_urls[1])
+# b = 12
 
-            
-def starteverything(a:list):
-    # 10 threads each has 32 pages to pick up urls of properties
+
+# 18 threads each one has 1000 urls
+
+def starteverything(a: list):
+    # 18 threads each has 1000 pages 
+
     k = 1
     l = 32
-    for i in range(1, 20):  # 11 last one
+
+    for i in range(1, 19):  # 18 threads last one
         # bringpages(k,l)
-        threadx = SyncThread(k, l,list[i])
-        threadx.start()
+        t = 0
+
+        threadx = SyncThread(k, l, a[t:t+100])
+        try:
+
+            threadx.start()
+        except:
+            
+            pass
         print(k, "/", l)
         k = l+1
         l = l+32+1
+        t = t+10
 
-# starteverything(u_urls)
+
+starteverything(u_urls)
 
 
 # starteverything()
 # starteverything2()
 
 
-
+#taskkill /F /IM Firefox.exe /T
 
