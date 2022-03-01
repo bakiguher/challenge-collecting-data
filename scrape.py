@@ -3,9 +3,37 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 from dataclasses import dataclass
+import os
+from threading import Thread, RLock
+import numpy as np
+import glob, os
 
 
-driver = webdriver.Chrome(executable_path="chromedriver.exe")
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+
+from selenium import webdriver
+from selenium.webdriver import FirefoxOptions
+
+
+def read_txt_files():
+    urls=[]
+    txtFiles = glob.glob('*.txt')
+    for a in txtFiles:
+        file1 = open(a, 'r')
+        lines = file1.readlines()
+        urls.append(lines)
+        file1.close()
+
+    return urls        
+    #print(txtFiles)
+
+def write_all_urls_to_txt(urlist:list):
+    file1 = open("all_urls.txt",'w')
+    file1.write(urlist)
+    file1.close()
+    
 
 
 class HouseData:
@@ -33,12 +61,15 @@ ur = 'https://www.immoweb.be/en/classified/house/for-sale/merelbeke/9820/9768055
 
 
 def scrape_house1(url):
+    options = FirefoxOptions()
+    driver = webdriver.Firefox(options=options)
     driver.get(url)
+
+
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     h_data = HouseData()
-    
-   
+
     _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
         "script", attrs={"type": "text/javascript"}).text.strip()
 
@@ -48,7 +79,7 @@ def scrape_house1(url):
     data = json.loads(e)  # python dictionary
 
     # TODO read data from data dict and put in in to class
-    
+
     h_data.link = url
     h_data.price = data["price"]["mainValue"]
     h_data.adress = data["property"]["location"]["postalCode"] + \
@@ -73,17 +104,13 @@ def scrape_house1(url):
 
     # js = json.dumps(h_data.__dict__)
 
-   
-
-   
-
     with open('json_data1.txt', 'w') as outfile:
-         json.dump(data, outfile)
+        json.dump(data, outfile)
 
     driver.close()
 
 
-scrape_house1(ur)
+# scrape_house1(ur)
 
 
 # 1 :   from 1 to 350 we are going every page and getting links of the properties    X 350   times thread
@@ -94,29 +121,85 @@ scrape_house1(ur)
 #
 
 
-def bringpages(start, end):
-    links = []
-    for i in range(start, end):
-        urlmain = 'https://www.immoweb.be/en/search/house-and-apartment/for-sale?countries=BE&page='
-        page_nr = str(i) + "&orderBy=relevance"
-        url = (
-            urlmain + page_nr
-        )
-        time.sleep(
-            2
-        )
 
-        driver.get(url)
-        soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        for elem in soup.find_all("a", attrs={"class": "card__title-link"}):
-            links.append(elem.get("href"))
-    # write in to a file maybe
-    return links
+class SyncThread(Thread):
+    def __init__(self,k,l):
+        Thread.__init__(self)
+        self.k = k
+        self.l = l
+    def run(self):
+        
+        for i in range(self.k, self.l):
+            links = []
+            
+            urlmain = 'https://www.immoweb.be/en/search/apartment/for-sale?countries=BE&page='
+            #urlmain = 'https://www.immoweb.be/en/search/house-and-apartment/for-sale?countries=BE&page='
+            
+            
+            #urlmain = 'https://www.immoweb.be/en/search/house/for-sale?countries=BE&page='
+            page_nr = str(i) + "&orderBy=cheapest"
+            url = (
+                urlmain + page_nr
+            )
+            time.sleep(
+                2
+            )
+
+            options = FirefoxOptions()
+            driver1 = webdriver.Firefox(options=options)
+
+            # s=Service(ChromeDriverManager().install())
+            # driver = webdriver.Chrome(service=s)
+            # driver.maximize_window()
+           
+            # options = webdriver.ChromeOptions()
+            # options.add_experimental_option('excludeSwitches', ['enable-logging'])
+           
+            
+            # driver1 = webdriver.Chrome(service=s) # executable_path="c:\dev\chromedriver.exe", options=options, service=Service(ChromeDriverManager().install())
+    
+            driver1.get(url)
+            soup = BeautifulSoup(driver1.page_source, "html.parser")
+
+            for elem in soup.find_all("a", attrs={"class": "card__title-link"}):
+                links.append(elem.get("href"))
+                #print(elem.get("href"))
+
+            # write in to a file maybe
+
+            
+            with open("apt" + str(self.k)+ "-" + str(self.l)+  "_url.txt", "a") as textfileurls:
+                for element in links:
+                    textfileurls.write(element + "\n")
+                textfileurls.close()
+        
+            driver1.close()
+
+            # with open('json_links.txt', 'w') as outfile:
+            #     json.dump(links, outfile)
+
+        # return links
+
+
+
+
+
+
+
 
 
 def starteverything():
     # 1 to 20 call bringpages
-    for i in range(1, 33):
+    k = 1
+    l = 32
+    for i in range(1, 11):  # 11 last one
+        # bringpages(k,l)
+        threadx=SyncThread(k,l)
+        threadx.start()
+        print(k, "/", l)
+        k = l+1
+        l = l+32+1
 
-        pass
+
+starteverything()
