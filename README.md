@@ -5,7 +5,7 @@
 - Duration: `3 days`
 - Deadline: `02/03/2022 4:30 PM`
 - Team challenge : 2
-- Developer Name : `Baki Guher` , `Moshood Owolabi`
+- Developers : `Baki Guher` , `Moshood Owolabi`
 - Level: `Junior Developer`
 - Organization: `Becode  AI Bootcamp`
 
@@ -47,8 +47,8 @@ The real estate company "ImmoEliza" wants to create a machine learning model to 
 You must save everything in a `.csv` file.
 
 ## Description
-Python scripts to scrape from www.immoweb.be for sale houses and apartments. 
-It uses threading and it can be run many times. Ideal is; for a standard pc with 20 GB memory and I7 cpu,  20 threads while scraping properties and 100 urls for each thread.
+Python scripts to scrape from www.immoweb.be for houses and apartments in the market for sale. 
+It uses threading and it can be run many times. Ideal is; for a standard pc with 16 GB memory and i7 cpu,  20 threads while scraping properties and 100 urls for each thread.
 It takes around 50 minutes for scraping 2000 properties.
 
  
@@ -91,15 +91,15 @@ To run execute below commands
 Beautifulsoup and selenium packages used. 
 In selenium; Firefox web driver with --headless option 
 
-To collect the urls; scrape_url must run two times one for houses and one for apartments, in the search url properties ordered according to price.
-Default was relevancy, but it brings the same properties on many pages.  
+To collect the urls; scrape_url must run two times one for houses and one for apartments, in the search properties are ordered according to price.
+Default ordering was relevancy, but it brings the same properties on many pages.  
 In first run we collected for sale houses' urls 
 In second run  we collected appartments' urls
 
-For property detailed data; 
+For property detailes data; 
 We ran 4 times scrape_propert script. 
 Each one collected around 2500 property data. There were around 18000 urls for properties. 
 
-At the end of the scraping 10000 property data collected. Same scripts can be used to dump all data used by immoweb if needed. 
+At the end of the scraping 10000 property data collected. Same scripts can be used to retrieve all data used by immoweb if needed. 
 
 
