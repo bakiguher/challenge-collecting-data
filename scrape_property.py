@@ -6,7 +6,7 @@ import json
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import csv
-import typing
+
 
 
 '''

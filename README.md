@@ -48,17 +48,17 @@ You must save everything in a `.csv` file.
 
 ## Description
 Python scripts to scrape from www.immoweb.be for sale houses and apartments. 
-It uses threading and it can be run many times in batches. ideal is for a standar pc is 20 threads while scraping properties and 100 urls for each thread It takes around 50 minutes for scraping 2000 properties with 
-16 GB memory, intel core i7. 
+It uses threading and it can be run many times. Ideal is; for a standard pc with 20 GB memory and I7 cpu,  20 threads while scraping properties and 100 urls for each thread.
+It takes around 50 minutes for scraping 2000 properties.
 
  
 ## Repo Architecture 
 
 ```
 
-│   README.md      :This file
-│   scrape_urls.py        :Scrapes the url addresses from immoweb web site
-│   scrape_property.py    :Scrapes the property data from given url adresses  
+│   README.md                     : This file
+│   scrape_urls.py                : Scrapes the url addresses from immoweb web site
+│   scrape_property.py            : Scrapes the property data from given url adresses  
 │___   
 |    urls          
 │   │ all_urls_temporary.txt      : All url adresses from immoweb, not cleaned.
@@ -91,12 +91,13 @@ To run execute below commands
 Beautifulsoup and selenium packages used. 
 In selenium; Firefox web driver with --headless option 
 
-For urls 1 time run was enough for eachhouses and apartments
+To collect the urls; scrape_url must run two times one for houses and one for apartments, in the search url properties ordered according to price.
+Default was relevancy, but it brings the same properties on many pages.  
 In first run we collected for sale houses' urls 
 In second run  we collected appartments' urls
 
 For property detailed data; 
-4 times scrape_propert script run. 
+We ran 4 times scrape_propert script. 
 Each one collected around 2500 property data. There were around 18000 urls for properties. 
 
 At the end of the scraping 10000 property data collected. Same scripts can be used to dump all data used by immoweb if needed. 

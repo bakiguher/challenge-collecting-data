@@ -17,7 +17,7 @@ class SyncThread(Thread):
     ---Because of immoweb returning same properties most of the time we choosed to sort the pages according to price, also many 
         duplicates have been found, probably those were paid advertisements 
     '''
-    def __init__(self, k, l):
+    def __init__(self, k:int, l:int):
         Thread.__init__(self)
         self.k = k
         self.l = l
