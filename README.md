@@ -88,9 +88,17 @@ To run execute below commands
 
 
 ## Details
-    Beautifulsoup and selenium packages used
-    In selenium Firefox web driver with --headless option
-    for property urls 1 time run was enough for houses and 1 run for appartments
-    for property detailed data 4 times scrape_propert script run. Each one collected around 2500 property data. There were around 18000 urls for properties. At the end of the scraping 10000 property data collected. Same scripts can be used to dump all data used by immoweb if needed. 
+Beautifulsoup and selenium packages used. 
+In selenium; Firefox web driver with --headless option 
+
+For urls 1 time run was enough for eachhouses and apartments
+In first run we collected for sale houses' urls 
+In second run  we collected appartments' urls
+
+For property detailed data; 
+4 times scrape_propert script run. 
+Each one collected around 2500 property data. There were around 18000 urls for properties. 
+
+At the end of the scraping 10000 property data collected. Same scripts can be used to dump all data used by immoweb if needed. 
 
 
