@@ -1,45 +1,52 @@
 from selenium import webdriver
 from selenium.webdriver import FirefoxOptions
 
-from threading import Thread, RLock
+from threading import Thread
 import json
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import csv
+import typing
 
 
-class HouseData:
-
-    link: str
-    price: str  # float
-    adress = str  # post code and municipality
-    type_of_property = str  # enum    from url 5th one when we split
-    subtype_of_property = str  # enum   WE DONT HAVE THIS
-    number_of_rooms = str  # int
-    area = str  # float
-    fully_equipped_kitchen = str  # yes no (no data) int
-    open_fire = str
-    terrace = str
-    terrace_area = str
-    garden = str
-    garden_area = str
-    surface_land = str
-    surface_plot_land = str
-    number_of_facades = str
-    swimming_pool = str
-    isnewly_built = str
-
-    def __str__(self):
-        return iter([self.link, self.price, self.adress, self.type_of_property, self.subtype_of_property, self.number_of_rooms,
-                    self.area, self.fully_equipped_kitchen, self.open_fire, self.terrace, self.terrace_area, self.garden, self.garden_area,
-                    self.surface_land, self.surface_plot_land, self.number_of_facades, self.swimming_pool, self.isnewly_built])
-
-
-ur = 'https://www.immoweb.be/en/classified/house/for-sale/merelbeke/9820/9768055?searchId=621c996e4790f'
+'''
+    Scraped data structure: 
+    url: str
+    id: int
+    price: float  
+    adress : str  # post code and municipality
+    type_of_property : str   
+    subtype_of_property : str     
+    bedroomCount : int  
+    land_surface : float
+    kitchen_type : string 
+    fireplaceExists : bool
+    hasTerrace : bool
+    terraceSurface : float
+    hasGarden : bool
+    gardenSurface : float
+    surface_land_area : float
+    netHabitableSurface : float
+    facadeCount : int
+    hasSwimmingPool : bool
+    isnewly_built : bool
+'''
 
 
 class SyncThread(Thread):
-    def __init__(self, k, l, urls):
+    '''
+    Class for threads to scrape properties from immoweb.be
+    k : starting file name number
+    l: ending file name number
+    urls: list containing property urls.
+    Firefox webdriver will be used with --headless option so it will not create a browser window request did not work for us
+    data is scraped from a javascript object from the web site then converted to a python dictionary.
+    Data read from dictionary and put in to a list. But the dictionary did not have some of the values we were looking for. 
+    First we tried to check if data is there, but "try except" was a much faster solution.
+    Initialasing the driver is also in "try-except" if there is an error it goes to next url.  
+   
+    '''
+    def __init__(self, k:int, l:int, urls:list):
         Thread.__init__(self)
         self.k = k
         self.l = l
@@ -47,110 +54,147 @@ class SyncThread(Thread):
 
     def run(self):
 
-        
         for url in self.urls:
             options = FirefoxOptions()
             options.add_argument("--headless")
 
             driver = webdriver.Firefox(options=options)
-        
-            #try:
 
-            driver.get(url)
+            # try:
+            try:
+                driver.get(url)
 
-            soup = BeautifulSoup(driver.page_source, "html.parser")
+                soup = BeautifulSoup(driver.page_source, "html.parser")
+                
+               
+                _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
+                    "script", attrs={"type": "text/javascript"}).text.strip()
 
-            _alldata = soup.find("div", attrs={"class": "container-main-content"}).find(
-                "script", attrs={"type": "text/javascript"}).text.strip()
+                _d = _alldata.replace('window.classified =', '')
+                _e = _d.replace(';', '')
 
-            d = _alldata.replace('window.classified =', '')
-            e = d.replace(';', '')
+                data = json.loads(_e)  # python dictionary
+                
 
-            data = json.loads(e)  # python dictionary
+                _h = []
+                _h.append(url)
+                _h.append(data["id"])
+                _h.append(data["price"]["mainValue"])
+                _h.append(data["property"]["location"]["postalCode"] +
+                          "/" + data["property"]["location"]["locality"])
+                _h.append(data["property"]["type"])
+                _h.append(data["property"]["subtype"])
+                _h.append(data["property"]["bedroomCount"])
 
-            # TODO read data from data dict and put in in to list
-            _h = []
-            _h.append(url)
-            _h.append(data["id"])
-            _h.append(data["price"]["mainValue"])
-            _h.append(data["property"]["location"]["postalCode"] +
-                        "/" + data["property"]["location"]["locality"])
-            _h.append(data["property"]["type"])
-            _h.append(data["property"]["subtype"])
-            _h.append(data["property"]["bedroomCount"])
-            _h.append(data["property"]["land"]["surface"])
-            _h.append(data["property"]["kitchen"]["type"])
-            _h.append(data["property"]["fireplaceExists"])
-            _h.append(data["property"]["hasTerrace"])
-            _h.append(data["property"]["terraceSurface"])
-            _h.append(data["property"]["hasGarden"])
-            _h.append(data["property"]["gardenSurface"])
-            _h.append(data["property"]["land"]["surface"])
-            _h.append(data["property"]["netHabitableSurface"])
-            _h.append(data["property"]["building"]["facadeCount"])
-            _h.append(data["property"]["hasSwimmingPool"])
-            _h.append(data["flags"]["isNewlyBuilt"])
+                try:
+                    _h.append(data["property"]["land"]["surface"])
+                except:
+                    _h.append("")
 
-            # print(_h)
+                try:
+                    _h.append(data["property"]["kitchen"]["type"])
+                except:
+                    _h.append("")
 
-            # append list to csv
-            with open(str(self.k) + "_" + str(self.l) + '_prop.csv', 'a', newline='') as f:
-                write = csv.writer(f)
-                write.writerow(_h)
+                try:
+                    _h.append(data["property"]["fireplaceExists"])
+                except:
+                    _h.append("")
 
-            driver.close()
+                try:
+                    _h.append(data["property"]["hasTerrace"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["terraceSurface"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["hasGarden"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["gardenSurface"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["land"]["surface"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["netHabitableSurface"])
+                except:
+                    _h.append("")
+
+                try:
+                    _h.append(data["property"]["building"]["facadeCount"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["property"]["hasSwimmingPool"])
+                except:
+                    _h.append("")
+                try:
+                    _h.append(data["flags"]["isNewlyBuilt"])
+                except:
+                    _h.append("")
+                
+                
+                with open("4-" + str(self.k) + "_" + str(self.l) + '_prop.csv', 'a', newline='') as f:
+                    write = csv.writer(f)
+                    write.writerow(_h)
+
+                driver.close()
+            except:
+                pass
             
-            # except:
-            #     pass
 
 
-def get_urls():
+def get_urls() -> list:
+    '''
+    Function to get url adresses of each property in to a list
+    '''
     lines = []
-    with open("unique_urls.txt") as file:
+    with open("./urls/unique_unscraped_urls.txt") as file:
         for line in file:
             line = line.strip()
             lines.append(line)
     return lines
 
 
-u_urls = get_urls()
+def start_property_scraping(a: list):
+    '''
+    Function to start the threads;
+    20 threads each will take 100 property urls from the list 
+    This function will many times we choosed to run with 20 threads and 100 urls each 
+    for file naming we used 2 variables:
+        start_file_name_k 
+        end_file_name_l
+    url_count: numbers of url given to thread
 
-# print(u_urls[0])
-# print(u_urls[1])
-# b = 12
+    In theory it is expected to scrape 2000 preperties on each run
+    After each run "taskkill /F /IM Firefox.exe /T"    command used on terminal to kill Firefox web driver
 
+    '''
 
-# 18 threads each one has 1000 urls
-
-def starteverything(a: list):
-    # 18 threads each has 1000 pages 
-
-    k = 1
-    l = 32
-
-    for i in range(1, 19):  # 18 threads last one
+    start_file_name_k = 1
+    end_file_name_l = 100
+    url_count = 0
+    for i in range(1, 21):  # 20 threads last one
         # bringpages(k,l)
-        t = 0
 
-        threadx = SyncThread(k, l, a[t:t+100])
-        try:
+        threadx = SyncThread(
+            start_file_name_k, end_file_name_l, a[url_count:url_count+100])
+        threadx.start()
 
-            threadx.start()
-        except:
-            
-            pass
-        print(k, "/", l)
-        k = l+1
-        l = l+32+1
-        t = t+10
+        # print(k, "/", l)
+        start_file_name_k = end_file_name_l+1
+        end_file_name_l = end_file_name_l + 100 + 1
+        url_count = url_count + 100+1
 
 
-starteverything(u_urls)
+u_urls = get_urls()
+start_property_scraping(u_urls)
 
 
-# starteverything()
-# starteverything2()
-
-
-#taskkill /F /IM Firefox.exe /T
 

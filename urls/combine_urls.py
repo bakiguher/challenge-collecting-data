@@ -1,5 +1,8 @@
 import glob
-def read_txt_files():
+def read_txt_files()->list:
+    '''
+    Function to combine txt files created by each thread
+    '''
     urls=[]
     txtFiles = glob.glob('*.txt')
     for a in txtFiles:
@@ -9,11 +12,12 @@ def read_txt_files():
         file1.close()
 
     return urls        
-    #print(txtFiles)
+   
 
 def write_all_urls_to_txt(urlist:list):
-    # with open('all_urls.txt', 'w') as fp:
-    #     pickle.dump(urlist, fp)
+    '''
+    Function to write txt files created by each thread
+    '''
 
     file=open('combined_urls.txt','w')
     for items in urlist:
@@ -22,7 +26,6 @@ def write_all_urls_to_txt(urlist:list):
     file.close()
 
 
-        #fp.write("\n".join(str(item) for item in urlist))
 
 
 
