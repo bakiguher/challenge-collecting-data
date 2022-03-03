@@ -5,7 +5,7 @@
 - Duration: `3 days`
 - Deadline: `02/03/2022 4:30 PM`
 - Team challenge : 2
-- Developers : `Baki Guher` , `Moshood Owolabi`
+- Developers : `Baki Guher` , `https://www.linkedin.com/in/moshood-owolabi`
 - Level: `Junior Developer`
 - Organization: `Becode  AI Bootcamp`
 
